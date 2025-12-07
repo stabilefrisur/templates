@@ -9,30 +9,16 @@
 ## Setup Steps
 
 ### 1. Clone or Initialize a Git Repo
+Clone an existing repo and **complete steps 2-4**.
 ```powershell
 git clone <gitlab-existing-repo-url> <project-name>
 cd <project-name>
 ```
 
-Alternatively, to start a project from scratch:
+Alternatively, start a new project and **complete all steps**.
 ```powershell
 git init <project-name>
 cd <project-name>
-git add .
-git commit -m "chore: Initial commit"
-git remote add origin <gitlab-new-repo-url>
-git push -u origin main
-```
-
-`.gitignore` essentials:
-
-```
-.venv\
-dist/
-build/
-*.pyc
-__pycache__/
-.env
 ```
 
 ### 2. Create Virtual Environment
@@ -75,6 +61,24 @@ uv add pandas plotly
 ### 8. Add developer dependencies
 ```powershell
 uv add --dev pytest ruff mypy
+```
+
+### 9. Create .gitignore
+```
+.venv/
+dist/
+build/
+*.pyc
+__pycache__/
+.env
+```
+
+### 10. Git commit and push to Gitlab
+```
+git add .
+git commit -m "chore: Initial commit"
+git remote add origin <gitlab-new-repo-url>
+git push -u origin main
 ```
 
 ## Development Workflow
