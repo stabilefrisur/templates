@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/styles/default.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markdown-it-texmath/css/texmath.min.css">
+<link rel="stylesheet" href="file:///c:\Users\ROG3003\.vscode\extensions\goessner.mdmath-2.7.4\themes\default\style.css">
+
+</head>
+<body class="markdown-body">
+<h1 dir="auto" id="python-project--concise-uv--github-workflow">Python project — concise uv + GitHub workflow</h1>
+<p dir="auto">This is a compact, modern reference for creating, developing and publishing a Python project using uv, git and GitHub. Assumes a bash shell and that you use <code>uv</code> for venv, dependency and project management.</p>
+<p dir="auto">Core ideas (short):</p>
+<ul dir="auto">
+<li dir="auto">Use a <code>pyproject.toml</code>-based layout with source in <code>src/</code>.</li>
+<li dir="auto">Keep <code>.venv/</code> out of source control. Use <code>uv venv</code> to create/manage the venv.</li>
+<li dir="auto">Treat <code>pyproject.toml</code> as the single source of truth; run <code>uv sync</code> after manual edits.</li>
+<li dir="auto">Default branch name: <code>master</code>.</li>
+</ul>
+<p dir="auto">Prerequisites:</p>
+<ul dir="auto">
+<li dir="auto">uv (CLI), git, a GitHub account.</li>
+</ul>
+<h2 dir="auto" id="quick-start">Quick start</h2>
+<p dir="auto">Initialize a new project and create a venv (example using Python 3.13):</p>
+<pre><code class="code-line language-bash" dir="auto">uv init my_project --lib --python 3.13
+<span class="hljs-built_in">cd</span> my_project
+<span class="hljs-comment"># create the venv (uses .python-version if present)</span>
+uv venv
+</code></pre>
+<p dir="auto">Activate the venv (bash):</p>
+<pre><code class="code-line language-bash" dir="auto"><span class="hljs-built_in">source</span> .venv/bin/activate
+</code></pre>
+<p dir="auto">Run the project or a script with uv (no install required):</p>
+<pre><code class="code-line language-bash" dir="auto">uv run src/my_project/main.py    <span class="hljs-comment"># run a script directly</span>
+uv run my_project               <span class="hljs-comment"># run an installed entry point (see below)</span>
+</code></pre>
+<h2 dir="auto" id="source-layout-and-build-system">Source layout and build system</h2>
+<p dir="auto">Prefer the src layout:</p>
+<pre><code dir="auto">my_project/
+├─ pyproject.toml
+└─ src/
+	└─ my_project/
+		└─ main.py
+</code></pre>
+<p dir="auto">Use uv's native build backend (<code>uv_build</code>) for a fast, zero-config build by default. Add this to <code>pyproject.toml</code>:</p>
+<pre><code class="code-line language-toml" dir="auto"><span class="hljs-section">[build-system]</span>
+<span class="hljs-attr">requires</span> = [<span class="hljs-string">&quot;uv_build&gt;=0.9.5,&lt;0.10.0&quot;</span>]
+<span class="hljs-attr">build-backend</span> = <span class="hljs-string">&quot;uv_build&quot;</span>
+
+<span class="hljs-section">[tool.uv.build-backend]</span>
+<span class="hljs-comment"># optional overrides; defaults expect a single module under src/&lt;name&gt;</span>
+<span class="hljs-attr">module-root</span> = <span class="hljs-string">&quot;src&quot;</span>
+</code></pre>
+<p dir="auto">After editing <code>pyproject.toml</code> manually run:</p>
+<pre><code class="code-line language-bash" dir="auto">uv <span class="hljs-built_in">sync</span>   <span class="hljs-comment"># ensures venv metadata and pyproject stay in sync</span>
+</code></pre>
+<h2 dir="auto" id="dependencies-best-practices">Dependencies (best practices)</h2>
+<ul dir="auto">
+<li dir="auto">Prefer pinned versions for reproducibility: <code>uv add requests==2.31.0</code>.</li>
+<li dir="auto">Add dev dependencies with <code>--dev</code> and commit them to <code>pyproject.toml</code>.</li>
+</ul>
+<p dir="auto">Examples:</p>
+<pre><code class="code-line language-bash" dir="auto">uv add pandas==2.2.0 scikit-learn plotly
+uv add --dev pytest black ruff
+uv pip list    <span class="hljs-comment"># list packages in the current uv-managed venv</span>
+</code></pre>
+<p dir="auto">If you need to remove a package:</p>
+<pre><code class="code-line language-bash" dir="auto">uv remove matplotlib
+</code></pre>
+<h2 dir="auto" id="editable-install--entry-points">Editable install &amp; entry points</h2>
+<p dir="auto">Register a CLI entry point in <code>pyproject.toml</code>:</p>
+<pre><code class="code-line language-toml" dir="auto"><span class="hljs-section">[project.scripts]</span>
+<span class="hljs-attr">my_project</span> = <span class="hljs-string">&quot;my_project.main:main&quot;</span>
+</code></pre>
+<p dir="auto">Install in editable mode for local development:</p>
+<pre><code class="code-line language-bash" dir="auto">uv pip install -e .
+uv run my_project    <span class="hljs-comment"># now available via uv run my_project</span>
+</code></pre>
+<h2 dir="auto" id="git--github-concise">Git &amp; GitHub (concise)</h2>
+<p dir="auto">Initialize repo, commit, and push to GitHub (use <code>master</code> as default):</p>
+<pre><code class="code-line language-bash" dir="auto">git init
+git branch -M master
+git add .
+git commit -m <span class="hljs-string">&quot;chore: initial commit&quot;</span>
+<span class="hljs-comment"># create repo on GitHub (web UI or use gh cli), then add remote</span>
+git remote add origin https://github.com/&lt;your-user&gt;/my_project.git
+git push -u origin master
+</code></pre>
+<p dir="auto">.gitignore essentials (example):</p>
+<pre><code dir="auto">.venv/
+dist/
+build/
+*.pyc
+__pycache__/
+.env
+</code></pre>
+<p dir="auto">Stop tracking a file already committed:</p>
+<pre><code class="code-line language-bash" dir="auto">git <span class="hljs-built_in">rm</span> --cached path/to/file
+git commit -m <span class="hljs-string">&quot;chore: remove sensitive file from VCS&quot;</span>
+</code></pre>
+<p dir="auto">Branch workflow (feature branch → PR → merge to master):</p>
+<pre><code class="code-line language-bash" dir="auto">git checkout -b feat/awesome
+<span class="hljs-comment"># work, stage, commit</span>
+git push -u origin feat/awesome
+<span class="hljs-comment"># open PR on GitHub and merge to master</span>
+git checkout master
+git pull origin master
+git branch -d feat/awesome
+git push origin --delete feat/awesome
+</code></pre>
+<h2 dir="auto" id="testing-with-pytest">Testing with pytest</h2>
+<p dir="auto">Create <code>tests/</code> and configure pytest via <code>pyproject.toml</code> if desired:</p>
+<pre><code class="code-line language-toml" dir="auto"><span class="hljs-section">[tool.pytest.ini_options]</span>
+<span class="hljs-attr">pythonpath</span> = <span class="hljs-string">&quot;src&quot;</span>
+<span class="hljs-attr">testpaths</span> = [<span class="hljs-string">&quot;tests&quot;</span>]
+</code></pre>
+<p dir="auto">Run tests:</p>
+<pre><code class="code-line language-bash" dir="auto">uv run -m pytest
+<span class="hljs-comment"># or, if pytest is in the venv</span>
+pytest
+</code></pre>
+<h2 dir="auto" id="build--publish">Build &amp; publish</h2>
+<p dir="auto">Build sdist and wheel:</p>
+<pre><code class="code-line language-bash" dir="auto">uv build
+<span class="hljs-comment"># outputs will be in dist/</span>
+</code></pre>
+<p dir="auto">Synchronize and publish (follow prompts for credentials):</p>
+<pre><code class="code-line language-bash" dir="auto">uv <span class="hljs-built_in">sync</span>
+uv publish
+</code></pre>
+<p dir="auto">Notes: always commit and push tags/changes before publishing. Prefer using test.pypi.org for initial tests.</p>
+<p dir="auto">Tip: when running builds in CI or when you want to ensure the build works without any custom <code>tool.uv.sources</code> settings, run:</p>
+<pre><code class="code-line language-bash" dir="auto">uv build --no-sources
+</code></pre>
+<p dir="auto">This forces the build to use only <code>build-system.requires</code> and matches other frontends' behaviour.</p>
+<h2 dir="auto" id="short-tips--best-practices">Short tips &amp; best practices</h2>
+<ul dir="auto">
+<li dir="auto">Keep <code>pyproject.toml</code> authoritative. Run <code>uv sync</code> after manual edits.</li>
+<li dir="auto">Pin runtime deps for libraries; use ranges or caret for apps where appropriate.</li>
+<li dir="auto">Keep secrets out of the repo. Use environment variables or a secrets manager.</li>
+<li dir="auto">Add CI (GitHub Actions) to run lint, tests and build on PRs.</li>
+<li dir="auto">Prefer <code>master</code> as the default branch name.</li>
+</ul>
+<h2 dir="auto" id="quick-checklist">Quick checklist</h2>
+<ul dir="auto">
+<li dir="auto">[ ] uv init + uv venv</li>
+<li dir="auto">[ ] add dependencies and run <code>uv sync</code></li>
+<li dir="auto">[ ] register entry points and <code>uv pip install -e .</code></li>
+<li dir="auto">[ ] add tests and CI</li>
+<li dir="auto">[ ] build (<code>uv build</code>) and publish (<code>uv publish</code>)</li>
+</ul>
+<hr dir="auto">
+<p dir="auto">If you want, I can also create a minimal <code>pyproject.toml</code> template, a <code>.gitignore</code>, and a GitHub Actions CI file for lint/test/build. Which would you like next?</p>
+
+</body>
+</html>
