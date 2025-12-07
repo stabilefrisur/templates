@@ -64,13 +64,15 @@ uv add --dev pytest ruff mypy
 ```
 
 ### 9. Create .gitignore
-```
+```powershell
+@"
 .venv/
 dist/
 build/
 *.pyc
 __pycache__/
 .env
+"@ | Out-File -FilePath .gitignore -Encoding utf8
 ```
 
 ### 10. Git commit and push to Gitlab
